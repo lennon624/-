@@ -1,0 +1,508 @@
+#include<stdio.h>
+#include<stdlib.h>
+#define MAX_VERTEX_MUN  10
+#define STACK_INIT_SIZE 100
+#define STACKINCREMENT 10
+typedef enum{
+	UDG,DG,UDN,DN
+} GraphKind;
+
+typedef struct arcNode{
+	int              adjvex;   //该弧所指向的顶点的位置 
+	struct  arcNode* nextarc;  //指向下一条弧的指针 
+	int              weight;
+} ArcNode; 
+
+ArcNode* createArcNode(int data,int x)    //创建一个边表结点 
+{
+    ArcNode* newNode=(ArcNode*)malloc(sizeof(ArcNode));
+	newNode->adjvex=data;
+	newNode->nextarc=NULL;
+	newNode->weight=x;
+	return newNode;
+}
+typedef struct VNode{
+	char      data;   //顶点信息      
+	ArcNode  *firstarc;  //志向下一条依附该顶点的弧的指针      
+} VNode, AdjList[MAX_VERTEX_MUN]; 
+
+typedef struct {
+	AdjList    vertices;  
+	int        vexnum, arcnum;  //图的当前顶点数和弧数 
+	GraphKind  kind;             //图的种类标志 
+}ALGraph;
+
+void CreateUDG(ALGraph *G);
+void CreateDG(ALGraph *G);
+void CreateUDN(ALGraph *G);
+void CreateDN(ALGraph *G);
+
+
+//查询该顶点位置 
+int LocateVex(ALGraph G,char V){
+	int i;
+	for(i = 0;i < G.vexnum; i++){
+		if(G.vertices[i].data == V){
+			return i;
+		}
+	}
+	printf("没%c这个东东，滚\n",V); 
+	exit(0);
+}
+     //创建图 
+int CreateALGraph(ALGraph *G){
+	printf("要建立的图类型 0.UDG 1.DG 2.UDN 3.DN :");
+	scanf("%d",&(*G).kind);
+	switch((*G).kind){
+		case UDG:
+			CreateUDG(G);
+			break;
+		case DG:
+			CreateDG(G);
+			break;
+		case UDN:
+			CreateUDN(G);
+			break;
+		case DN:
+			CreateDN(G);
+			break;
+		default:
+			return -1;
+	}
+}  
+
+
+//创建无向图 
+void CreateUDG(ALGraph *G){
+	int i,j,k,v1,v2;
+	char w; 
+    printf("输入顶点数和弧数: ");	              //确定顶点数和弧数 
+    scanf("%d,%d,%d",&(*G).vexnum,&(*G).arcnum); 
+    printf("输入各个顶点:"); 
+    getchar();
+    for(i=0;i<(*G).vexnum;i++){                           //确定顶点值  
+        scanf("%c,",&(*G).vertices[i].data);      
+	} 
+	for(i=0;i<(*G).vexnum;i++){ 
+		ArcNode* NewArcNode = createArcNode(-1,0);
+		(*G).vertices[i].firstarc = NewArcNode;   
+	}
+	printf("输入边\n");  
+	getchar();                        
+    for(k=0;k<(*G).arcnum;k++){                           //确定边 
+		scanf("%c,%c",&v1,&v2);
+		getchar();
+    	i = LocateVex(*G,v1);
+    	j = LocateVex(*G,v2);
+    	ArcNode* MoveArcNode = createArcNode(-1,0);            
+	    MoveArcNode = (*G).vertices[i].firstarc;  
+    	ArcNode* PushArcNode = createArcNode(j,0);
+    	if((*G).vertices[i].firstarc->adjvex == -1){
+    	(*G).vertices[i].firstarc->adjvex = PushArcNode->adjvex;
+    	(*G).vertices[i].firstarc->weight = PushArcNode->weight;
+    	}
+    	else{
+            while(MoveArcNode->nextarc != NULL){
+            	MoveArcNode = MoveArcNode->nextarc;
+			}
+			MoveArcNode->nextarc = PushArcNode;
+			MoveArcNode = (*G).vertices[i].firstarc;
+        }            
+	    MoveArcNode = (*G).vertices[j].firstarc;  
+    	ArcNode* TPushArcNode = createArcNode(i,0);
+    	if((*G).vertices[j].firstarc->adjvex == -1){
+    	(*G).vertices[j].firstarc->adjvex = TPushArcNode->adjvex;
+    	(*G).vertices[i].firstarc->weight = TPushArcNode->weight;
+    	}
+    	else{
+            while(MoveArcNode->nextarc != NULL){
+            	MoveArcNode = MoveArcNode->nextarc;
+			}
+			MoveArcNode->nextarc = TPushArcNode;
+			MoveArcNode = (*G).vertices[j].firstarc;
+        } 
+	}
+    (*G).kind = UDG; 
+}             
+
+//创建有向图 
+void CreateDG(ALGraph *G){
+	int i,j,k,v1,v2;
+	char w; 
+    printf("输入顶点数和弧数: ");	              //确定顶点数和弧数 
+    scanf("%d,%d,%d",&(*G).vexnum,&(*G).arcnum); 
+    printf("输入各个顶点:"); 
+    getchar();
+    for(i=0;i<(*G).vexnum;i++){                           //确定顶点值  
+        scanf("%c,",&(*G).vertices[i].data);      
+	} 
+	for(i=0;i<(*G).vexnum;i++){ 
+		ArcNode* NewArcNode = createArcNode(-1,0);
+		(*G).vertices[i].firstarc = NewArcNode;   
+	}
+	printf("输入边\n");  
+	getchar();                        
+    for(k=0;k<(*G).arcnum;k++){                           //确定边 
+		scanf("%c,%c",&v1,&v2);
+		getchar();
+    	i = LocateVex(*G,v1);
+    	j = LocateVex(*G,v2);
+    	ArcNode* MoveArcNode = createArcNode(-1,0);            
+	    MoveArcNode = (*G).vertices[i].firstarc;  
+    	ArcNode* PushArcNode = createArcNode(j,0);
+    	if((*G).vertices[i].firstarc->adjvex == -1){
+    	(*G).vertices[i].firstarc->adjvex = PushArcNode->adjvex;
+    	(*G).vertices[i].firstarc->weight = PushArcNode->weight;
+    	}
+    	else{
+            while(MoveArcNode->nextarc != NULL){
+            	MoveArcNode = MoveArcNode->nextarc;
+			}
+			MoveArcNode->nextarc = PushArcNode;
+			MoveArcNode = (*G).vertices[i].firstarc;
+        }            
+	}
+    (*G).kind = DG; 
+}             
+
+//创建无向网 
+void CreateUDN(ALGraph *G){
+	int i,j,k,v1,v2,x;
+	char w; 
+    printf("输入顶点数和弧数: ");	              //确定顶点数和弧数 
+    scanf("%d,%d,%d",&(*G).vexnum,&(*G).arcnum); 
+    printf("输入各个顶点:"); 
+    getchar();
+    for(i=0;i<(*G).vexnum;i++){                           //确定顶点值  
+        scanf("%c,",&(*G).vertices[i].data);      
+	} 
+	for(i=0;i<(*G).vexnum;i++){ 
+		ArcNode* NewArcNode = createArcNode(-1,0);
+		(*G).vertices[i].firstarc = NewArcNode;   
+	}
+	printf("输入边和对应的权值\n");  
+	getchar();                        
+    for(k=0;k<(*G).arcnum;k++){                           //确定边 
+		scanf("%c,%c,%d",&v1,&v2,&x);
+		getchar();
+    	i = LocateVex(*G,v1);
+    	j = LocateVex(*G,v2);
+    	ArcNode* MoveArcNode = createArcNode(-1,0);            
+	    MoveArcNode = (*G).vertices[i].firstarc;  
+    	ArcNode* PushArcNode = createArcNode(j,x);
+    	if((*G).vertices[i].firstarc->adjvex == -1){
+    	(*G).vertices[i].firstarc->adjvex = PushArcNode->adjvex;
+    	(*G).vertices[i].firstarc->weight = PushArcNode->weight;
+    	}
+    	else{
+            while(MoveArcNode->nextarc != NULL){
+            	MoveArcNode = MoveArcNode->nextarc;
+			}
+			MoveArcNode->nextarc = PushArcNode;
+			MoveArcNode = (*G).vertices[i].firstarc;
+        }            
+	    MoveArcNode = (*G).vertices[j].firstarc;  
+    	ArcNode* TPushArcNode = createArcNode(i,x);
+    	if((*G).vertices[j].firstarc->adjvex == -1){
+    	(*G).vertices[j].firstarc->adjvex = TPushArcNode->adjvex;
+    	(*G).vertices[j].firstarc->weight = TPushArcNode->weight;
+    	}
+    	else{
+            while(MoveArcNode->nextarc != NULL){
+            	MoveArcNode = MoveArcNode->nextarc;
+			}
+			MoveArcNode->nextarc = TPushArcNode;
+			MoveArcNode = (*G).vertices[j].firstarc;
+        } 
+	}
+    (*G).kind = UDN; 
+}             
+
+//创建有向网 
+void CreateDN(ALGraph *G){
+	int i,j,k,v1,v2,x;
+	char w; 
+    printf("输入顶点数和弧数: ");	              //确定顶点数和弧数 
+    scanf("%d,%d,%d",&(*G).vexnum,&(*G).arcnum); 
+    printf("输入各个顶点:"); 
+    getchar();
+    for(i=0;i<(*G).vexnum;i++){                           //确定顶点值  
+        scanf("%c,",&(*G).vertices[i].data);      
+	} 
+	for(i=0;i<(*G).vexnum;i++){ 
+		ArcNode* NewArcNode = createArcNode(-1,0);
+		(*G).vertices[i].firstarc = NewArcNode;   
+	}
+	printf("输入边和对应的权值\n");  
+	getchar();                        
+    for(k=0;k<(*G).arcnum;k++){                           //确定边 
+		scanf("%c,%c,%d",&v1,&v2,&x);
+		getchar();
+    	i = LocateVex(*G,v1);
+    	j = LocateVex(*G,v2);
+    	ArcNode* MoveArcNode = createArcNode(-1,0);            
+	    MoveArcNode = (*G).vertices[i].firstarc;  
+    	ArcNode* PushArcNode = createArcNode(j,x);
+    	if((*G).vertices[i].firstarc->adjvex == -1){
+    	(*G).vertices[i].firstarc->adjvex = PushArcNode->adjvex;
+    	(*G).vertices[i].firstarc->weight = PushArcNode->weight;
+    	}
+    	else{
+            while(MoveArcNode->nextarc != NULL){
+            	MoveArcNode = MoveArcNode->nextarc;
+			}
+			MoveArcNode->nextarc = PushArcNode;
+			MoveArcNode = (*G).vertices[i].firstarc;
+        }            
+	}
+    (*G).kind = DN; 
+}          
+
+
+//------------------------------------------------队列----------------------------------// 
+struct Node{
+	char data;
+	struct Node* next;
+}; 
+
+struct Queue{
+	struct Node* front;
+	struct Node* rear;
+	int queueSize;
+};
+struct Node* createNode(char data)
+{
+	struct Node* newNode=(struct Node*)malloc(sizeof(struct Node));
+	newNode->data=data;
+	newNode->next=NULL;
+	return newNode;
+}
+
+
+//创建队列 
+struct Queue* createQueue()
+{
+	struct Queue* queue=(struct Queue*)malloc(sizeof(struct Queue));
+	queue->front=queue->rear=NULL;
+	queue->queueSize=0;
+	return queue;
+ } 
+//入队
+void push(struct Queue* queue,char data) 
+{
+	struct Node* newNode=createNode(data);
+	if(queue->queueSize==0)
+	   queue->front=newNode;
+	else
+	   queue->rear->next=newNode;
+	queue->rear=newNode;
+	queue->queueSize++;
+}
+//获取对头元素
+char front(struct Queue* queue)
+{
+	if(queue->queueSize==0)
+	{
+	printf("队列为空"); 
+	return -1;
+	}	
+	return queue->front->data;
+}
+//判断队列是否为空 
+int empty(struct Queue* queue)
+{
+	return queue->queueSize==0;
+}
+//出队
+void pop(struct Queue* queue)
+{
+	if(queue->queueSize==0)
+	{
+		printf("队列为空无法出队");
+		system("pause");
+		exit(0); 
+	}
+	struct Node* nextNode=queue->front->next;
+	free(queue->front);
+	queue->front=nextNode;
+	queue->queueSize--;
+ } 
+//---------------------------------------------------------------------------//
+//--------------------------------------栈-----------------------------------//
+ typedef struct {
+	int stackSize;
+	char* base;
+	char* top;
+}SqStack;
+
+
+char  InitStack(SqStack *L) 
+ {
+ 	L->base =(char *)malloc( STACK_INIT_SIZE *sizeof(char));
+ 	if(!L->base)
+ 	return -1;
+ 	L->top=L->base;
+ 	L->stackSize=STACK_INIT_SIZE;
+ 	return 0;
+ }
+ //入栈
+ char Push(SqStack *L,char data) 
+ {
+   if(L->top-L->base >=L->stackSize)
+   {
+ 	L->base =(char*)malloc( (STACK_INIT_SIZE+STACKINCREMENT )*sizeof(char));
+ 	if(!L->base)
+ 	return -1;
+ 	L->top=L->base+L->stackSize;
+ 	L->stackSize+= STACKINCREMENT; 
+   }
+ *L->top++=data;
+}
+
+
+//出栈
+char Pop(SqStack *L) 
+{
+   	if(L->top==L->base)
+	return -1;
+	else
+   L->top--;
+   return 0;	
+} 
+//判断栈是否为空 
+int Sempty(SqStack *L)
+{
+	return L->top==L->base;
+}
+//获取栈顶元素
+char Sfront(SqStack *L)
+{
+	if(L->stackSize==0)
+	{
+	printf("栈为空"); 
+	return -1;
+	}	
+	return *(L->top-1);
+}
+//-------------------------------------------------------------------------// 
+//寻找邻接点 (DFS)
+void DFSSearchvex(ALGraph *G,char s,int *visit,int n,SqStack *L){
+	int i,j;
+	for(i=0;i<(*G).vexnum;i++){
+		if((*G).vertices[i].data == s)
+		{
+			break;
+		}
+	}
+	ArcNode* PMoveArcNode = createArcNode(-1,0);            
+	PMoveArcNode = (*G).vertices[i].firstarc;  
+	if(PMoveArcNode->adjvex != -1){
+		if(visit[PMoveArcNode->adjvex] == 0){
+	  	    Push(L,(*G).vertices[PMoveArcNode->adjvex].data);
+		    visit[PMoveArcNode->adjvex]=1;
+	    }
+	}
+	while(PMoveArcNode->nextarc != NULL){
+		if(visit[PMoveArcNode->nextarc->adjvex] == 0){
+		    Push(L,(*G).vertices[PMoveArcNode->nextarc->adjvex].data);
+		    visit[PMoveArcNode->nextarc->adjvex]=1;
+	    }
+		 PMoveArcNode = PMoveArcNode->nextarc;
+	}
+}
+
+
+
+//DFS
+void DFSTraverse(ALGraph *G,int *visit,int n){
+	int i,j;
+	char s,t;
+	for(i=0;i<(*G).vexnum;i++){
+		visit[i]=0;
+	}
+	printf("输入DFS起点："); 
+	scanf("%c",&s);
+	SqStack L;
+	InitStack(&L);
+	Push(&L,s);
+	printf("%c\t",Sfront(&L));
+	Pop(&L);
+	for(i=0;i<(*G).vexnum;i++){
+		if((*G).vertices[i].data == s){
+		    visit[i]=1;
+		}
+	}
+	DFSSearchvex(G,s,visit,(*G).vexnum,&L);
+	    while(!Sempty(&L))
+	    {	
+    		printf("%c\t",Sfront(&L));
+    		t=Sfront(&L);
+    		Pop(&L);
+		    DFSSearchvex(G,t,visit,(*G).vexnum,&L);
+	    }
+	
+}
+
+//寻找邻接点 (BFS)
+void BFSSearchvex(ALGraph *G,char s,int *visit,int n,struct Queue* myQueue){
+	int i,j,k;
+	for(i=0;i<(*G).vexnum;i++){
+		if((*G).vertices[i].data == s)
+		{
+			break;
+		}
+	}
+	ArcNode* PMoveArcNode = createArcNode(-1,0);            
+	PMoveArcNode = (*G).vertices[i].firstarc;  
+	if(PMoveArcNode->adjvex != -1){
+		if(visit[PMoveArcNode->adjvex] == 0){
+	  	    push(myQueue,(*G).vertices[PMoveArcNode->adjvex].data);
+		    visit[PMoveArcNode->adjvex]=1;
+	    }
+	}
+	while(PMoveArcNode->nextarc != NULL){
+		if(visit[PMoveArcNode->nextarc->adjvex] == 0){
+		    push(myQueue,(*G).vertices[PMoveArcNode->nextarc->adjvex].data);
+		    visit[PMoveArcNode->nextarc->adjvex]=1;
+	    }
+		 PMoveArcNode = PMoveArcNode->nextarc;
+	}
+
+}
+//BFS 
+void BFSTraverse(ALGraph *G,int *visit,int n){
+	int i,j;
+	char s;
+	for(i=0;i<(*G).vexnum;i++){
+		visit[i]=0;
+	}
+	printf("输入BFS起点："); 
+	scanf("%c",&s);
+	struct Queue *myQueue=createQueue();
+	push(myQueue,s);
+	printf("%c\t",front(myQueue));
+	pop(myQueue);
+	for(i=0;i<(*G).vexnum;i++){
+		if((*G).vertices[i].data == s){
+		    visit[i]=1;
+		}
+	}
+	BFSSearchvex(G,s,visit,(*G).vexnum,myQueue);
+	    while(!empty(myQueue))
+	    {
+		    printf("%c\t",front(myQueue));
+		    BFSSearchvex(G,front(myQueue),visit,(*G).vexnum,myQueue);
+		    pop(myQueue);
+	    }
+	
+}   
+int main(){
+	int visit[10],i;
+	ALGraph G;
+	CreateALGraph(&G);
+	BFSTraverse(&G,visit,10);
+	printf("\n"); 
+	getchar();
+	DFSTraverse(&G,visit,10);
+	return 0;
+} 
